@@ -1,22 +1,6 @@
-<!DOCTYPE html>
-<!-- saved from url=(0059)https://adminlte.io/themes/dev/AdminLTE/pages/calendar.html -->
-<html class="mdl-js" style="height: auto;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+@extends('layouts.app')
 
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Calendar</title>
-    <!-- Tell the browser to be responsive to screen width -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="{{ asset('css/font-awesome.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
-    <!-- Ionicons -->
-    <link rel="stylesheet" href="{{ asset('css/ionicons.min.css') }}">
-    <!-- fullCalendar 2.2.5-->
-    <link rel="stylesheet" href="{{ asset('css/fullcalendar.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/fullcalendar.print.css') }}" media="print">
-    <!-- Theme style -->
-    <link rel="stylesheet" href="{{ asset('css/adminlte.min.css') }}">
-<body class="sidebar-mini" style="height: auto;">
+@section('content')
 <div class="wrapper">
     <!-- Content Wrapper. Contains page content -->
     <div class="" style="min-height: 863px;">
@@ -76,8 +60,8 @@
                                 <div class="input-group">
                                     <input id="event-end-time" name="" type="text" class="form-control" placeholder="end (hh:mm) empty if all day">
                                 </div>
-                                <label for="file">Multimedia (png, jpg, mp3)</label>
-                                <input name="file" type="file" class="form-control" accept=".png,.jpg,.mp3">
+                                <label for="media">Multimedia (png, jpg, mp3)</label>
+                                <input name="media" type="file" class="form-control" accept=".png,.jpg,.mp3">
                                 <label for="notify">Notification<input name="notify" type="checkbox" class="form-control"></label>
                                 <input type="hidden" name="t_start" id="t_start">
                                 <input type="hidden" name="t_end" id="t_end">
@@ -296,6 +280,4 @@
         });
     })
 </script>
-
-
-</body></html>
+@endsection
