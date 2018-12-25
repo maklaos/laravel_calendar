@@ -80,6 +80,6 @@ class CalendarController extends Controller
      */
     public function destroy(Calendar $calendar)
     {
-        //
+        $calendar->delete();
     }
 }
