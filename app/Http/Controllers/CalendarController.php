@@ -6,6 +6,8 @@ use App\Calendar;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\CalendarNotification;
+use App\User;
 
 class CalendarController extends Controller
 {
@@ -39,6 +41,9 @@ class CalendarController extends Controller
      */
     public function store(Request $request)
     {
+        $user = User::find(Auth::user()->id);
+        $user->notify(new CalendarNotification());
+
         $media = $request->file('file') ? $request->file('file')->store('public/media') : null;
 
         $request->merge([
