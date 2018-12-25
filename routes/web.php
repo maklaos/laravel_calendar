@@ -15,4 +15,4 @@ Route::get('/', 'HomeController@index')->name('home');
 
 Auth::routes();
 
-Route::resource('/calendar', 'CalendarController', ['except' => ['show', 'create', 'edit', 'update']])->middleware('auth');
+Route::resource('/calendar', 'CalendarController', ['except' => ['create', 'edit', 'update']])->middleware('auth');

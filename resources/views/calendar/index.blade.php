@@ -31,7 +31,7 @@
                             <div class="card-header">
                                 <h3 class="card-title">Create Event</h3>
                             </div>
-                            <form class="card-body" id="event-form" method="post" enctype="multipart/form-data">
+                            <form class="card-body" id="event-form" action="{{ route('calendar.store') }}" method="post" enctype="multipart/form-data">
                                 {{ csrf_field() }}
                                 <div class="btn-group" style="width: 100%; margin-bottom: 10px;">
                                     <ul class="fc-color-picker" id="color-chooser">
@@ -43,28 +43,26 @@
                                     </ul>
                                 </div>
                                 <div class="input-group">
-                                    <input id="event-title" name="title" type="text" class="form-control" placeholder="Event Title">
+                                    <input id="event-title" name="name" type="text" class="form-control" placeholder="Event Title" required>
                                 </div>
                                 <div class="input-group">
-                                    <input id="event-description" name="description" type="text" class="form-control" placeholder="Event description">
+                                    <input id="event-start-date" name="event-start-date" type="text" class="form-control" placeholder="start (yyyy-mm-dd)" required>
                                 </div>
                                 <div class="input-group">
-                                    <input id="event-start-date" type="text" class="form-control" placeholder="start (yyyy-mm-dd)">
+                                    <input id="event-start-time" name="event-start-time" type="text" class="form-control" placeholder="start (hh:mm) empty if all day">
                                 </div>
                                 <div class="input-group">
-                                    <input id="event-start-time" type="text" class="form-control" placeholder="start (hh:mm) empty if all day">
+                                    <input id="event-end-date" name="event-end-date" type="text" class="form-control" placeholder="end (yyyyy-mm-dd)" required>
                                 </div>
                                 <div class="input-group">
-                                    <input id="event-end-date" type="text" class="form-control" placeholder="end (yyyyy-mm-dd)">
-                                </div>
-                                <div class="input-group">
-                                    <input id="event-end-time" name="" type="text" class="form-control" placeholder="end (hh:mm) empty if all day">
+                                    <input id="event-end-time" id="event-end-time" type="text" class="form-control" placeholder="end (hh:mm) empty if all day">
                                 </div>
                                 <label for="media">Multimedia (png, jpg, mp3)</label>
-                                <input name="media" type="file" class="form-control" accept=".png,.jpg,.mp3">
+                                <input name="file" type="file" class="form-control" accept=".png,.jpg,.mp3">
                                 <label for="notify">Notification<input name="notify" type="checkbox" class="form-control"></label>
                                 <input type="hidden" name="t_start" id="t_start">
                                 <input type="hidden" name="t_end" id="t_end">
+                                <input type="hidden" name="color" id="event-color">
                                 <div class="input-group-append">
                                     <button id="add-new-event" type="submit" class="btn btn-primary btn-flat">Add</button>
                                 </div>
@@ -76,12 +74,16 @@
                             </div>
                             <div class="card-body">
                                 <div id="title">Title</div>
-                                <div id="description">description</div>
                                 <div id="start">start</div>
                                 <div id="end">end</div>
+                                <div id="media"></div>
 
                                 <div class="input-group-append">
-                                    <button id="remove-event" type="button" class="btn btn-primary btn-flat" data-remove-id="0">Delete</button>
+                                    <form action="{{ route('calendar.index') }}" id="event-delete" method="post">
+                                        {{ csrf_field() }}
+                                        <input type="hidden" name="_method" value="DELETE">
+                                        <button id="remove-event" type="submit" class="btn btn-primary btn-flat" data-remove-id="0">Delete</button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -120,7 +122,6 @@
 <!-- Page specific script -->
 <script>
     $(function () {
-        var ev_id = 1;
         //Date for the calendar events (dummy data)
         var date = new Date()
         var d    = date.getDate(),
@@ -128,49 +129,16 @@
             y    = date.getFullYear();
 
         var event_list = [
+            @foreach($events as $event)
             {
-                id              : 2,
-                title          : 'Long Event',
-                start          : new Date(y, m, d - 5),
-                end            : new Date(y, m, d - 2),
-                backgroundColor: '#f39c12', //yellow
-                borderColor    : '#f39c12' //yellow
+                id             : '{{ $event->id }}',
+                title          : '{{ $event->name }}',
+                start          : moment('{{ $event->t_start }}'),
+                end            : moment('{{ $event->t_end }}'),
+                backgroundColor: '{{ $event->color }}',
+                borderColor    : '#fff'
             },
-            {
-                id              : 3,
-                title          : 'Meeting',
-                start          : new Date(y, m, d, 10, 30),
-                allDay         : false,
-                backgroundColor: '#0073b7', //Blue
-                borderColor    : '#0073b7' //Blue
-            },
-            {
-                id              : 4,
-                title          : 'Lunch',
-                start          : new Date(y, m, d, 12, 0),
-                end            : new Date(y, m, d, 14, 0),
-                allDay         : false,
-                backgroundColor: '#00c0ef', //Info (aqua)
-                borderColor    : '#00c0ef' //Info (aqua)
-            },
-            {
-                id              : 5,
-                title          : 'Birthday Party',
-                start          : new Date(y, m, d + 1, 19, 0),
-                end            : new Date(y, m, d + 1, 22, 30),
-                allDay         : false,
-                backgroundColor: '#00a65a', //Success (green)
-                borderColor    : '#00a65a' //Success (green)
-            },
-            {
-                id              : 6,
-                title          : 'Click for Google',
-                start          : new Date(y, m, 28),
-                end            : new Date(y, m, 29),
-                url            : 'http://google.com/',
-                backgroundColor: '#3c8dbc', //Primary (light-blue)
-                borderColor    : '#3c8dbc' //Primary (light-blue)
-            }
+            @endforeach
         ];
 
         /* initialize the calendar
@@ -198,17 +166,35 @@
                 var event_view = $('#event-view');
 
                 event_view.find('#title').html('').html(calEvent.title);
-                event_view.find('#description').html('').html(calEvent.description);
                 event_view.find('#url').html('').html(calEvent.url);
                 event_view.find('#start').html('').html(moment(calEvent.start).format('D.M.YY H:mm'));
                 event_view.find('#end').html('').html(moment(calEvent.end).format('D.M.YY H:mm'));
-                event_view.find('#allDay').html('').html(calEvent.allDay);
                 event_view.find('#remove-event').attr('data-remove-id', calEvent.id);
+                event_view.find('#event-delete').attr('action', '{{ route('calendar.index') }}/'+calEvent.id);
 
                 // change the border color
                 $('.fc-event').css('border-color', 'white');
                 $(this).css('border-color', 'red');
 
+                $.ajax({
+                    url: "{{ route('calendar.index') }}/"+calEvent.id,
+                    type: "GET",
+                    contentType: false,
+                    cache: false,
+                    processData:false,
+                    success: function(data) {
+                        if (data.media.includes('.mpga')) {
+                            $('#media').html('<audio controls><source src="/storage/'+data.media+'" type="audio/mpeg"></audio>');
+                        } else if (data.media.includes('.png') || data.media.includes('.jpg') || data.media.includes('.jpeg'))  {
+                            $('#media').html('<img src="/storage/'+data.media+'" style="max-width:100%">');
+                        } else {
+                            $('#media').html('');
+                        }
+                    },
+                    error: function(e) {
+                        alert('error');
+                    }
+                });
             }
         })
 
@@ -226,7 +212,7 @@
                 'border-color'    : currColor
             });
         })
-        $('#add-new-event').click(function (e) {
+        $('#event-form').on('submit', function (e) {
             e.preventDefault();
 
             var start_date;
@@ -252,32 +238,58 @@
 
             $('#t_start').val(start_date);
             $('#t_end').val(end_date);
+            $('#event-color').val(currColor);
 
-            var all_day = false;
+            $.ajax({
+                url: "{{ route('calendar.index') }}",
+                type: "POST",
+                data:  new FormData(this),
+                contentType: false,
+                cache: false,
+                processData:false,
+                success: function(data) {
+                    var eventObject = {
+                        id : data,
+                        title : $('#event-title').val(),
+                        start : start_date,
+                        end : end_date,
+                        backgroundColor : currColor,
+                        borderColor : '#fff',
+                        color : '#000',
+                    };
 
-            if (!$('#event-start-time').val().length && !$('#event-end-time').val().length) {
-                all_day = true;
-            }
+                    $('#calendar').fullCalendar('renderEvent', eventObject, true);
 
-            var eventObject = {
-                id : ev_id,
-                title : $('#event-title').val(),
-                description : $('#event-description').val(),
-                start : start_date,
-                end : end_date,
-                allDay: all_day,
-                backgroundColor : currColor,
-                borderColor : '#fff',
-                color : '#000',
-            };
+                    alert('added');
+                },
+                error: function ($xhr) {
 
-            $('#calendar').fullCalendar('renderEvent', eventObject, true);
-            ev_id++;
+                    var data = $xhr.responseJSON;
+                    alert(JSON.stringify(data));
+                }
+            });
         });
 
-        $('#remove-event').click(function(){
-            $('#calendar').fullCalendar('removeEvents', [$(this).attr('data-remove-id')]);
+        $('#event-delete').on('submit', function(e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: "POST",
+                data:  new FormData(this),
+                contentType: false,
+                cache: false,
+                processData:false,
+                success: function(data) {
+                    alert('deleted');
+                    $('#calendar').fullCalendar('removeEvents', [$('#remove-event').attr('data-remove-id')]);
+                },
+                error: function(e) {
+                    alert('error');
+                }
+            });
         });
+
     })
 </script>
 @endsection
